@@ -11,8 +11,8 @@ ThisBuild / scalacOptions ++= Seq("-new-syntax", "-deprecation", "-rewrite")
 
 val flinkVersion = "1.17.1"
 val flinkDependencies = Seq(
-  "org.flinkextended" %% "flink-scala-api" % s"${flinkVersion}_1.1.0" % Provided,
-  "org.apache.flink" % "flink-runtime-web" % flinkVersion % Provided,
+  "org.flinkextended" %% "flink-scala-api" % s"${flinkVersion}_1.1.0",
+  "org.apache.flink" % "flink-runtime-web" % flinkVersion,
   "org.apache.flink" % "flink-clients" % flinkVersion,
   "org.apache.flink" % "flink-test-utils" % flinkVersion % Test,
   "org.apache.flink" % "flink-streaming-java" % flinkVersion % Test classifier ("tests"),
