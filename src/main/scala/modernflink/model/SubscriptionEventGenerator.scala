@@ -2,6 +2,9 @@ package modernflink.model
 
 import org.apache.flink.streaming.api.functions.source.SourceFunction
 
+// to be rewritten to:
+import org.apache.flink.api.connector.source.Source
+
 import java.time.Instant
 import java.util.UUID
 import scala.annotation.tailrec
@@ -37,7 +40,7 @@ class SubscriptionEventsGenerator(
   ): Unit =
     if running && remainingEvents > 0 then
       ctx.collect(emitEvent(start)) // .collect emits elements from the source
-      Thread.sleep(sleepSeconds*1000) // delay emitting events
+      Thread.sleep(sleepSeconds * 1000) // delay emitting events
       myRun(start + 1, remainingEvents - 1, ctx)
 
   // match the events to the type of payment event
