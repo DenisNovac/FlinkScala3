@@ -8,23 +8,26 @@ import org.apache.flinkx.api.serializers.*
 import org.apache.flinkx.api.*
 import org.apache.flinkx.api.serializers.*
 
-// only runs on JDK 11
 object ReadDataSource extends App {
-  // read humitidy file
+  // read humidity file
   // location, time, humidity
   // Flagstaff, 1686208915, 59
 
   val env = StreamExecutionEnvironment.getExecutionEnvironment
 
   // read from file
-  val testStreamOne = env.fromCollection(
+  val testStreamOne: DataStream[HumidityReading] = env.fromCollection(
     Seq(
       HumidityReading("Flagstaff", 1686208915, 59),
       HumidityReading("Flagstaff", 1686295315, 53)
     )
   )
 
-  testStreamOne.print("OutputStream1").setParallelism(2)
+  testStreamOne
+    // endless wait?
+    // .map[HumidityReading](x => x.copy(humidity = x.humidity + 1))
+    .print("OutputStream1")
+    .setParallelism(2)
 
   env.execute()
 

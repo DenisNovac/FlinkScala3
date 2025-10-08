@@ -9,9 +9,9 @@ ThisBuild / organization := "com.example"
 ThisBuild / scalaVersion := "3.3.0"
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-deprecation", "-rewrite")
 
-val flinkVersion = "1.17.1"
+val flinkVersion = "1.20.0"
 val flinkDependencies = Seq(
-  "org.flinkextended" %% "flink-scala-api" % s"${flinkVersion}_1.1.0",
+  "org.flinkextended" %% "flink-scala-api" % s"${flinkVersion}_1.2.4",
   "org.apache.flink" % "flink-runtime-web" % flinkVersion,
   "org.apache.flink" % "flink-clients" % flinkVersion,
   "org.apache.flink" % "flink-test-utils" % flinkVersion % Test,

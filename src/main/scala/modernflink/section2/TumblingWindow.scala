@@ -6,10 +6,9 @@ import org.apache.flinkx.api.{DataStream, StreamExecutionEnvironment, WindowedSt
 import org.apache.flinkx.api.serializers.*
 import java.time.{Duration, Instant}
 
-given instantTypeInfo: TypeInformation[Instant] =
-  TypeInformation.of(classOf[Instant])
-
 @main def tumblingWindowDemo() =
 
-  val env = StreamExecutionEnvironment.getExecutionEnvironment
+  given instantTypeInfo: TypeInformation[Instant] =
+    TypeInformation.of(classOf[Instant])
 
+  val env = StreamExecutionEnvironment.getExecutionEnvironment
