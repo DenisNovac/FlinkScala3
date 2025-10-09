@@ -6,7 +6,7 @@ ThisBuild / resolvers ++= Seq(
 )
 // give the user a nice default project!
 ThisBuild / organization := "com.example"
-ThisBuild / scalaVersion := "3.3.0"
+ThisBuild / scalaVersion := "3.7.3"
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-deprecation", "-rewrite")
 
 val flinkVersion = "1.20.0"
