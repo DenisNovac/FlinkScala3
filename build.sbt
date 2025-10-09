@@ -14,10 +14,11 @@ val flinkDependencies = Seq(
   "org.flinkextended" %% "flink-scala-api" % s"${flinkVersion}_1.2.4",
   "org.apache.flink" % "flink-runtime-web" % flinkVersion,
   "org.apache.flink" % "flink-clients" % flinkVersion,
+  "org.apache.flink" % "flink-connector-kafka" % "3.4.0-1.20",
+  "org.apache.flink" % "flink-connector-base" % flinkVersion,
   "org.apache.flink" % "flink-test-utils" % flinkVersion % Test,
   "org.apache.flink" % "flink-streaming-java" % flinkVersion % Test classifier ("tests"),
-  "org.scalatest" %% "scalatest" % "3.2.13" % Test,
-  "org.apache.flink" % "flink-connector-kafka" % "1.17.0"
+  "org.scalatest" %% "scalatest" % "3.2.13" % Test
 )
 
 lazy val root = (project in file(".")).settings(
