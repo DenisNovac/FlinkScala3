@@ -1,56 +1,58 @@
 package modernflink.section2
 
 import modernflink.model.HumidityReading
-import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, WatermarkStrategy}
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction
-import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.api.windowing.triggers.{CountTrigger, PurgingTrigger}
 import org.apache.flink.util.Collector
+import org.apache.flinkx.api.{DataStream, StreamExecutionEnvironment}
 import org.apache.flinkx.api.serializers.*
-import org.apache.flinkx.api.StreamExecutionEnvironment
 
-import java.time.{Duration, Instant}
-import scala.jdk.CollectionConverters.*
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 
-@main def myListState(): Unit =
-  listStateDemo()
-
-// store all temperature change per location
-private def listStateDemo(): Unit =
+// --add-opens=java.base/java.util=ALL-UNNAMED
+@main def listState() = {
 
   val env = StreamExecutionEnvironment.getExecutionEnvironment
+
   val inputFile = env.readTextFile("src/main/resources/Humidity.txt")
-  val humidityData = inputFile.map(HumidityReading.fromString)
+  val data: DataStream[HumidityReading] = inputFile.map(HumidityReading.fromString)
 
-  val humidityChangeStream = humidityData
-    .keyBy(_.location)
-    .process(new KeyedProcessFunction[String, HumidityReading, String] {
-      // create state
-      var humidityOutputStream: ListState[HumidityReading] = _
+  val humidityChange =
+    data
+      .keyBy[String](_.location)
+      .process(new KeyedProcessFunction[String, HumidityReading, String] {
 
-      // initialize state
-      override def open(parameters: Configuration): Unit =
-        humidityOutputStream = getRuntimeContext.getListState(
-          new ListStateDescriptor[HumidityReading](
-            "humidityChangeOutputStream",
-            classOf[HumidityReading]
+        var humidityOutputStream: ListState[HumidityReading] = _
+
+        override def open(parameters: Configuration): Unit = {
+          humidityOutputStream = getRuntimeContext.getListState(
+            new ListStateDescriptor[HumidityReading](
+              "humidityChangeOutputStream",
+              classOf[HumidityReading]
+            )
           )
-        )
+        }
 
-      override def processElement(
-          value: HumidityReading,
-          ctx: KeyedProcessFunction[String, HumidityReading, String]#Context,
-          out: Collector[String]
-      ): Unit =
-        humidityOutputStream.add(value)
-        val humidityRecords: Iterable[HumidityReading] =
-          humidityOutputStream.get().asScala.toList
-        if humidityRecords.size > 10 then humidityOutputStream.clear()
+        override def processElement(
+            value: HumidityReading,
+            ctx: KeyedProcessFunction[String, HumidityReading, String]#Context,
+            out: Collector[String]
+        ): Unit = {
+          humidityOutputStream.add(value)
 
-        out.collect(s"${value.location} - ${humidityRecords.mkString(",")}")
-    })
+          val humidityRecords =
+            humidityOutputStream.get().asScala.toList // java Iterable
 
-  humidityChangeStream.print()
+          if humidityRecords.size > 10 then humidityOutputStream.clear()
+
+          out.collect(s"${value.location} - ${humidityRecords.size} - ${humidityRecords.mkString}")
+        }
+
+      })
+
+  humidityChange.print()
+
   env.execute()
+
+}

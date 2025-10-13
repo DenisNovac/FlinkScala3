@@ -1,47 +1,74 @@
 package modernflink.section1
 
 import modernflink.model.HumidityReading
-import org.apache.flinkx.api.{DataStream, StreamExecutionEnvironment}
 import org.apache.flink.api.common.typeinfo.{BasicTypeInfo, TypeInformation}
+import org.apache.flinkx.api.StreamExecutionEnvironment
 import org.apache.flinkx.api.serializers.*
+
+import java.time.Instant
+// flink-scala-api imports
+import org.apache.flinkx.api.*
+import org.apache.flinkx.api.serializers.*
+
 import modernflink.model.SubscriptionEvent
 import modernflink.model.SubscriptionEventsGenerator
 
-import java.time.Instant
+// --add-opens=java.base/java.util=ALL-UNNAMED
+object ReadDataSource1 {
 
-@main def readDataSource() =
-  val env = StreamExecutionEnvironment.getExecutionEnvironment
+  // for some reason .map creates endless waiting
+  // unless put into @main method instead of just object
+  @main def main() = {
+    // read humidity file
+    // location, time, humidity
+    // Flagstaff, 1686208915, 59
 
-  // 1. read from a collection
-  val testStreamOne = env.fromCollection(Seq(
-    HumidityReading("Flagstaff", 1686122515, 58),
-    HumidityReading("Flagstaff", 1686208915, 59)
-  ))
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
 
-  testStreamOne.print("OutputStream1").setParallelism(2)
+    // read from file
+    val testStream2 =
+      env
+        .readTextFile("src/main/resources/Humidity.txt")
+        .map[HumidityReading](s => HumidityReading.fromString(s))
 
-  env.execute()
+    testStream2
+      .print()
 
-  // 2. stream from a file
-  val testStream2 = env
-    .readTextFile("src/main/resources/Humidity.txt")
-    .map(HumidityReading.fromString)
+//    testStream2
+//      .setParallelism(12)
+//      .executeAndCollect()
+//      .toVector
+//      .foreach(println)
 
-  testStream2.print()
-//  env.execute()
+    env.execute()
 
-   // 3. stream from a socket
-  val testStreamThree = env.socketTextStream("127.0.0.1", 1235)
-//  testStreamThree.print()
-//  env.execute()
+  }
 
-  // 4. read from a data generator
-  given instantTypeInfo: TypeInformation[Instant] = BasicTypeInfo.INSTANT_TYPE_INFO
-  val genEvents = SubscriptionEventsGenerator(
-    sleepSeconds = 1,
-    startTime = Instant.parse("2023-08-13T00:00:00.00Z")
-  )
+}
 
-  val testStreamFour: DataStream[SubscriptionEvent] = env.addSource(genEvents)
-  testStreamFour.print()
-//  env.execute()
+// --add-opens=java.base/java.util=ALL-UNNAMED
+object ReadDataSource2 {
+
+  @main def main2() = {
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+
+    // flink provides some common types
+    given instantTypeInfo: TypeInformation[Instant] = BasicTypeInfo.INSTANT_TYPE_INFO
+
+    // SourceFunction allows to generate some stub data and put it directly into DataStream
+    // SubscriptionsEventGenerator is a generator of random events
+    // example of output:
+    //  10> CancelEvent(Joan,2025-10-08T13:48:47.215307Z,d76f410e-1855-4316-8eda-6c3f21e6d2f0)
+    //  1> PaymentEvent(Peggy,2025-10-08T13:48:48.215307Z,ca5ae489-a534-45ed-b75e-798a1844abea)
+    val genEventsStream = SubscriptionEventsGenerator(sleepSeconds = 1, startTime = Instant.now())
+
+    val testStreamFour: DataStream[SubscriptionEvent] =
+      env.addSource(genEventsStream)
+
+    testStreamFour
+      .print()
+
+    env.execute()
+  }
+
+}
